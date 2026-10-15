@@ -62,8 +62,8 @@ class ROMRepository @Inject constructor(@ApplicationContext private val context:
     }
 
     suspend fun download(rom: ROMImage, onProgress: (DownloadProgress) -> Unit): Result<File> = withContext(Dispatchers.IO) {
+        val dest = File(romsDir, "${rom.id}.vrom")
         runCatching {
-            val dest = File(romsDir, "${rom.id}.vrom")
             updateProgress(rom.id, 0L, rom.sizeBytes, ROMDownloadState.DOWNLOADING)
 
             val request = Request.Builder().url(rom.downloadUrl).build()
@@ -91,6 +91,7 @@ class ROMRepository @Inject constructor(@ApplicationContext private val context:
             updateProgress(rom.id, rom.sizeBytes, rom.sizeBytes, ROMDownloadState.VERIFYING)
             if (!verifyFile(dest, rom.sha256)) {
                 dest.delete()
+                refreshROM(rom.id, null)
                 updateProgress(rom.id, 0L, rom.sizeBytes, ROMDownloadState.CORRUPTED)
                 error("SHA-256 verification failed for ${rom.id}")
             }
@@ -98,6 +99,14 @@ class ROMRepository @Inject constructor(@ApplicationContext private val context:
             updateProgress(rom.id, rom.sizeBytes, rom.sizeBytes, ROMDownloadState.READY)
             refreshROM(rom.id, dest)
             dest
+        }.onFailure {
+            // A failed transfer used to leave the entry stuck on DOWNLOADING, which hid the
+            // download button for good and kept the card claiming a download was in progress
+            if (_downloadProgress.value[rom.id]?.state == ROMDownloadState.DOWNLOADING) {
+                dest.delete()
+                _downloadProgress.value = _downloadProgress.value - rom.id
+                refreshROM(rom.id, null)
+            }
         }
     }
 
@@ -112,7 +121,8 @@ class ROMRepository @Inject constructor(@ApplicationContext private val context:
         }
     }
 
-    // Copies a picked .vrom into app storage, reads its embedded manifest.json for metadata, and registers it alongside the manifest-fetched ROMs
+    // Copies a picked .vrom into app storage, reads its embedded manifest.json for metadata,
+    // and registers it alongside the manifest-fetched ROMs
     suspend fun importLocalRom(sourceUri: Uri): Result<ROMImage> = withContext(Dispatchers.IO) {
         runCatching {
             val id = "local-${UUID.randomUUID()}"

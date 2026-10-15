@@ -18,6 +18,14 @@ class InstanceRepository @Inject constructor(private val dao: VMInstanceDao) {
 
     suspend fun updateStatus(id: String, status: VMStatus) = dao.updateStatus(id, status)
 
+    // Guests are child processes of this app, so a fresh process means nothing is actually running:
+    // any status left behind as BOOTING/RUNNING/PAUSED is stale and would otherwise leave the UI
+    // showing a running instance with a Stop button that has no handle behind it
+    suspend fun markStaleInstancesStopped() = dao.updateStatuses(
+        from = listOf(VMStatus.BOOTING, VMStatus.RUNNING, VMStatus.PAUSED),
+        to = VMStatus.STOPPED,
+    )
+
     suspend fun touchLastUsed(id: String) = dao.updateLastUsed(id)
 
     suspend fun delete(instance: VMInstance) = dao.delete(instance)

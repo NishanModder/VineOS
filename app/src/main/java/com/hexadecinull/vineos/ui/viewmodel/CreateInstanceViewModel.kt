@@ -11,6 +11,7 @@ import com.hexadecinull.vineos.data.repository.ROMRepository
 import com.hexadecinull.vineos.native.VineRuntime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -75,6 +76,20 @@ class CreateInstanceViewModel @Inject constructor(
     fun createInstance() {
         val selectedRom = romFlow.value ?: return
         if (stateFlow.value is CreateInstanceState.Creating) return
+
+        val romPath = selectedRom.localPath?.takeIf { it.isNotBlank() && File(it).exists() }
+        if (romPath == null) {
+            stateFlow.value = CreateInstanceState.Error(
+                "The ROM image for ${selectedRom.displayName} is missing. Download it again, then retry.",
+            )
+            return
+        }
+
+        // The native runtime names the instance directory after the id it is given, so this has to
+        // be generated here: passing an empty id made every instance share <files>/instances/ and
+        // derive the same database id ("instances"), silently overwriting the previous instance
+        val instanceId = UUID.randomUUID().toString()
+
         stateFlow.value = CreateInstanceState.Creating
 
         viewModelScope.launch {
@@ -85,8 +100,8 @@ class CreateInstanceViewModel @Inject constructor(
             val isRooted = allowRootInstances.value && selectedRoot.value
 
             val instancePath = VineRuntime.createInstance(
-                instanceId = "",
-                romImagePath = selectedRom.localPath ?: "",
+                instanceId = instanceId,
+                romImagePath = romPath,
                 storageMb = storage,
             )
 
@@ -97,7 +112,6 @@ class CreateInstanceViewModel @Inject constructor(
                 return@launch
             }
 
-            val instanceId = File(instancePath).name
             val instance = VMInstance(
                 id = instanceId,
                 name = name,

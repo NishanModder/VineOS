@@ -55,6 +55,7 @@ class InstanceDetailViewModel @Inject constructor(private val instanceRepo: Inst
         viewModelScope.launch {
             if (instance.status != VMStatus.STOPPED) vmManager.killInstance(instance.id)
             instanceRepo.delete(instance)
+            vmManager.deleteInstanceData(instance)
         }
     }
 

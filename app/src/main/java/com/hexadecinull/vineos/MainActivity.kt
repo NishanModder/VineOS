@@ -1,10 +1,15 @@
 package com.hexadecinull.vineos
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -21,6 +26,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -60,6 +67,8 @@ class MainActivity : ComponentActivity() {
             val settingsVm: SettingsViewModel = hiltViewModel()
             val settings by settingsVm.settings.collectAsStateWithLifecycle()
 
+            RequestNotificationPermissionIfNeeded()
+
             LaunchedEffect(settings.keepScreenOn) {
                 if (settings.keepScreenOn) {
                     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -78,6 +87,22 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// The foreground service notification that keeps guests alive is invisible on Android 13+ until
+// POST_NOTIFICATIONS is granted, so ask for it up front instead of silently never showing it
+@Composable
+private fun RequestNotificationPermissionIfNeeded() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    LaunchedEffect(Unit) {
+        val granted = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        if (!granted) launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
+}
+
 @Composable
 fun VineOSApp(settings: AppSettings, onSettingsChange: (AppSettings) -> Unit) {
     val navController = rememberNavController()
@@ -89,7 +114,9 @@ fun VineOSApp(settings: AppSettings, onSettingsChange: (AppSettings) -> Unit) {
         NavHost(
             navController = navController,
             startDestination = Screen.Home.route,
-            // Each destination owns a Scaffold+TopAppBar that already consumes its own status/nav-bar insets; without consumeWindowInsets those get reserved a second time here, which is the empty gap at the top of every screen
+            // Each destination owns a Scaffold+TopAppBar that already consumes its own
+            // status/nav-bar insets; without consumeWindowInsets those get reserved a second
+            // time here, which is the empty gap at the top of every screen
             modifier = Modifier
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding),

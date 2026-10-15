@@ -9,10 +9,9 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# Gradle wrapper: keep the jar and properties, ignore the binary
-gradle/wrapper/gradle-wrapper.jar
-# ^ Un-comment the above if you prefer not to commit the jar.
-#   Committing it is fine and avoids bootstrap issues on CI.
+# Gradle wrapper: the jar and properties are committed on purpose (see the
+# !gradle/wrapper/gradle-wrapper.jar negation above), so it must not be
+# re-ignored here. Commit the jar to avoid bootstrap issues on CI.
 
 # Android
 *.apk

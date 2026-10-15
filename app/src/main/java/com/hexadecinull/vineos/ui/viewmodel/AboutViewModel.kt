@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.lifecycle.ViewModel
 import com.hexadecinull.vineos.BuildConfig
 import com.hexadecinull.vineos.domain.VineVMManager
+import com.hexadecinull.vineos.native.VineRuntime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -26,6 +27,9 @@ class AboutViewModel @Inject constructor(@ApplicationContext private val context
             AboutInfoItem("Version", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"),
             AboutInfoItem("Application ID", BuildConfig.APPLICATION_ID),
             AboutInfoItem("Build type", "${BuildConfig.BUILD_TYPE}${if (BuildConfig.DEBUG) ", debuggable" else ""}"),
+            // Loading the native library is a side effect of reading this, so a device where it
+            // can't load reports "Unavailable" instead of taking the whole screen down
+            AboutInfoItem("Native runtime", runCatching { VineRuntime.getRuntimeVersion() }.getOrDefault("Unavailable")),
         ),
     )
 

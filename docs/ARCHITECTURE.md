@@ -112,8 +112,9 @@ instance without extra lookups.
      executed through QEMU inside the container's mount namespace
    - execs the guest's Android `init` as PID 1 inside the new namespaces
 4. `VineVMManager` polls `VineRuntime.getInstanceStatus` every two seconds
-   on a background coroutine and republishes it as a `StateFlow<VMStatus>`
-   that the UI collects.
+   on a background coroutine, republishes it as a `StateFlow<VMStatus>`, and
+   writes each change through to the instance's row in Room, since that is
+   what the instance cards read their status from.
 5. Stopping sends `SIGTERM` to guest `init` and waits up to the configured
    timeout before falling back to `SIGKILL`; `VineService` stops itself once
    no instances remain running.

@@ -1,6 +1,7 @@
 package com.hexadecinull.vineos.ui.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hexadecinull.vineos.data.models.DownloadProgress
@@ -52,7 +53,9 @@ class ROMsViewModel @Inject constructor(private val romRepo: ROMRepository) : Vi
 
     fun download(rom: ROMImage) {
         viewModelScope.launch {
-            romRepo.download(rom, onProgress = {})
+            romRepo.download(rom, onProgress = {}).onFailure {
+                Log.w(TAG, "Download failed for ${rom.id}", it)
+            }
         }
     }
 
@@ -72,5 +75,9 @@ class ROMsViewModel @Inject constructor(private val romRepo: ROMRepository) : Vi
 
     fun clearImportError() {
         _importError.value = null
+    }
+
+    private companion object {
+        private const val TAG = "ROMsViewModel"
     }
 }

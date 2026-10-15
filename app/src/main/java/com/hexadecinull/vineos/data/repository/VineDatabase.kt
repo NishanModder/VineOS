@@ -39,6 +39,9 @@ interface VMInstanceDao {
     @Query("UPDATE vm_instances SET status = :status WHERE id = :id")
     suspend fun updateStatus(id: String, status: VMStatus)
 
+    @Query("UPDATE vm_instances SET status = :to WHERE status IN (:from)")
+    suspend fun updateStatuses(from: List<VMStatus>, to: VMStatus)
+
     @Query("UPDATE vm_instances SET lastUsedAt = :timestamp WHERE id = :id")
     suspend fun updateLastUsed(id: String, timestamp: Long = System.currentTimeMillis())
 

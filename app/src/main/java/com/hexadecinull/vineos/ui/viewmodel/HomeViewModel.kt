@@ -56,6 +56,9 @@ class HomeViewModel @Inject constructor(private val instanceRepo: InstanceReposi
                 vmManager.killInstance(instance.id)
             }
             instanceRepo.delete(instance)
+            // The row is gone but the guest's storage directory is not, delete it too or every
+            // deleted instance leaves its data behind forever
+            vmManager.deleteInstanceData(instance)
         }
     }
 

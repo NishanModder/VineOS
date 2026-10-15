@@ -47,6 +47,12 @@ jobs:
           path: app/build/reports/ktlint/
           retention-days: 7
 
+      # The reporters above write files, which can only be read by downloading the artifact.
+      # Re-emit them as annotations so each violation shows up inline on the pull request.
+      - name: Annotate ktlint violations
+        if: failure()
+        run: python3 scripts/ktlint_annotations.py || true
+
   # Android lint
   android-lint:
     name: Android lint
@@ -118,7 +124,9 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # The NDK version is auto-resolved from app/build.gradle.kts ndkVersion via the android-actions/setup-android action
+      # setup-android installs the command-line tools and accepts the SDK licenses; AGP then
+      # auto-downloads the platform, build-tools, CMake 3.22.1 and NDK it needs (app/build.gradle.kts
+      # pins no ndkVersion, so AGP's default NDK for this AGP release is used)
       - name: Set up Android SDK + NDK
         uses: android-actions/setup-android@v4
 

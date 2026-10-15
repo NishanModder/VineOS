@@ -1,5 +1,6 @@
 package com.hexadecinull.vineos.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hexadecinull.vineos.data.models.AbiCompat
@@ -48,11 +49,19 @@ class ROMDetailViewModel @Inject constructor(private val romRepo: ROMRepository)
 
     fun download() {
         val rom = romRepo.getRom(romIdFlow.value) ?: return
-        viewModelScope.launch { romRepo.download(rom, onProgress = {}) }
+        viewModelScope.launch {
+            romRepo.download(rom, onProgress = {}).onFailure {
+                Log.w(TAG, "Download failed for ${rom.id}", it)
+            }
+        }
     }
 
     fun delete() {
         val rom = romRepo.getRom(romIdFlow.value) ?: return
         viewModelScope.launch { romRepo.delete(rom) }
+    }
+
+    private companion object {
+        private const val TAG = "ROMDetailViewModel"
     }
 }

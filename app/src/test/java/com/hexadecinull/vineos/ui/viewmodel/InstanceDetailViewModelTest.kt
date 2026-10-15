@@ -42,7 +42,8 @@ class InstanceDetailViewModelTest {
         Dispatchers.resetMain()
     }
 
-    // uiState.first { predicate } suspends until the flow actually produces a matching value, instead of reading .value after a fixed advanceUntilIdle() and hoping enough dispatcher hops happened
+    // uiState.first { predicate } suspends until the flow actually produces a matching value,
+    // instead of reading .value after a fixed advanceUntilIdle() and hoping enough dispatcher hops happened
 
     @Test
     fun `initial uiState has no instance until load is called`() = runTest(testDispatcher) {
