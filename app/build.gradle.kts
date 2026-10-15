@@ -31,7 +31,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            // Matches the host ABIs AbiCompat knows how to run natively or via QEMU; armeabi is excluded since no 32-bit-only ARM devices ship with Android 8+ (minSdk 26) in practice
+            // Matches the host ABIs AbiCompat knows how to run natively or via QEMU; armeabi is
+            // excluded since no 32-bit-only ARM devices ship with Android 8+ (minSdk 26) in practice
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
         }
 
@@ -65,7 +66,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Without keystore.properties (e.g. a plain local checkout) this produces an unsigned release build rather than failing configuration entirely
+            // Without keystore.properties (e.g. a plain local checkout) this produces an unsigned
+            // release build rather than failing configuration entirely
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -126,7 +128,9 @@ ktlint {
     filter {
         exclude("**/generated/**")
         exclude("**/build/**")
-        include("**/kotlin/**")
+        // "**/kotlin/**" matched nothing here: the sources live under src/*/java/..., so ktlint
+        // was reporting success while checking zero files
+        include("**/*.kt")
     }
 }
 

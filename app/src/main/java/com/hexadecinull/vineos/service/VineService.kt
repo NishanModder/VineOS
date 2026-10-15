@@ -8,13 +8,27 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.hexadecinull.vineos.MainActivity
 import com.hexadecinull.vineos.VineApplication.Companion.CHANNEL_VM_RUNNING
+import com.hexadecinull.vineos.domain.VineVMManager
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class VineService : Service() {
+    @Inject lateinit var vmManager: VineVMManager
+
+    private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+    private var runningCountJob: Job? = null
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = when (intent?.action ?: ACTION_START) {
         ACTION_START -> {
-            startForeground(NOTIF_ID, buildNotification(runningCount = 0))
+            startForeground(NOTIF_ID, buildNotification(vmManager.runningInstances.value.size))
+            observeRunningCount()
             START_STICKY
         }
         ACTION_STOP -> {
@@ -28,7 +42,19 @@ class VineService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        scope.cancel()
         super.onDestroy()
+    }
+
+    // The notification used to be posted once with a hardcoded count of zero, so it said
+    // "No instances running" for as long as the service lived
+    private fun observeRunningCount() {
+        if (runningCountJob?.isActive == true) return
+        runningCountJob = scope.launch {
+            vmManager.runningInstances.collect { instances ->
+                startForeground(NOTIF_ID, buildNotification(instances.size))
+            }
+        }
     }
 
     private fun buildNotification(runningCount: Int): Notification {

@@ -44,7 +44,9 @@ class ShizukuManager @Inject constructor(@ApplicationContext private val context
         Shizuku.requestPermission(requestCode)
     }
 
-    // Runs the native namespace probe in the shell/root process Shizuku hosts, to answer directly whether this device's ADB-shell privilege level can do what the container engine needs, see docs/NOROOT_RESEARCH.md
+    // Runs the native namespace probe in the shell/root process Shizuku hosts, to answer directly
+    // whether this device's ADB-shell privilege level can do what the container engine needs, see
+    // docs/NOROOT_RESEARCH.md
     fun probeNamespaceSupport(): Flow<Result<NamespaceProbeResult>> = callbackFlow {
         if (!_status.value.isRunning || !_status.value.isGranted) {
             trySend(Result.failure(IllegalStateException("Shizuku is not connected or not granted")))

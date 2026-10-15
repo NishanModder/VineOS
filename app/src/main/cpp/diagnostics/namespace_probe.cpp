@@ -1,5 +1,6 @@
 #include "namespace_probe.h"
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <jni.h>
 #include <sched.h>

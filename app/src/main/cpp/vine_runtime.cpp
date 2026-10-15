@@ -1,4 +1,5 @@
 #include <jni.h>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <android/native_window.h>
@@ -22,6 +23,9 @@ static std::unordered_map<int64_t, InstanceRuntime> g_runtimes;
 static std::string j2s(JNIEnv* env, jstring js) {
     if (!js) return {};
     const char* c = env->GetStringUTFChars(js, nullptr);
+    // GetStringUTFChars returns null when the VM is out of memory, and constructing a
+    // std::string from null is undefined behaviour
+    if (!c) return {};
     std::string s(c);
     env->ReleaseStringUTFChars(js, c);
     return s;
@@ -57,14 +61,31 @@ Java_com_hexadecinull_vineos_native_VineRuntime_shutdown(
 JNIEXPORT jstring JNICALL
 Java_com_hexadecinull_vineos_native_VineRuntime_createInstance(
         JNIEnv* env, jobject,
-        jstring j_instance_id, jstring, jint) {
+        jstring j_instance_id, jstring j_rom_path, jint storage_mb) {
     const std::string id = j2s(env, j_instance_id);
+    // An empty id (or one with a path separator in it) would place the instance directory
+    // directly at data/instances/, making every instance share one directory
+    if (id.empty() || id.find('/') != std::string::npos) {
+        VINE_LOGE("createInstance: invalid instance id '%s'", id.c_str());
+        return nullptr;
+    }
+
     auto& mgr = vine::NamespaceManager::instance();
     const std::string path = mgr.data_dir() + "/instances/" + id;
     if (!vine::mkdirs(path + "/rootfs") || !vine::mkdirs(path + "/data")) {
         VINE_LOGE("Failed to create instance dirs at %s", path.c_str());
         return nullptr;
     }
+
+    // startInstance() loop-mounts <path>/rootfs.img, which only exists once the caller has
+    // materialized the ROM image there, so say so loudly rather than failing later in mount_rootfs
+    const std::string rom_path = j2s(env, j_rom_path);
+    if (rom_path.empty() || !vine::path_exists(rom_path)) {
+        VINE_LOGW("createInstance: ROM image '%s' is missing; %s/rootfs.img cannot be created yet",
+                  rom_path.c_str(), path.c_str());
+    }
+    VINE_LOGI("createInstance(%s) → %s (storage=%d MB, rom=%s)", id.c_str(), path.c_str(),
+              (int)storage_mb, rom_path.c_str());
     return s2j(env, path);
 }
 

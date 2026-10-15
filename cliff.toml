@@ -1,0 +1,56 @@
+# git-cliff configuration for VineOS.
+#
+# release.yml runs:
+#   git cliff --config cliff.toml --current --strip header
+# to build the changelog section of a GitHub Release body. Without this file
+# git-cliff falls back to its built-in defaults (and the workflow's step is
+# marked continue-on-error, so the release body would silently lose its
+# changelog), so everything the release needs is spelled out here.
+
+[changelog]
+header = ""
+body = """
+{% if version %}\
+## {{ version | trim_start_matches(pat="v") }}
+{% else %}\
+## Unreleased
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+
+{% for commit in commits %}
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}{{ commit.message | upper_first }}\
+{%- if commit.links %} ({% for link in commit.links %}[{{ link.text }}]({{ link.href }}){% endfor %}){% endif %}
+{%- endfor %}
+{% endfor %}
+"""
+footer = ""
+trim = true
+
+[git]
+conventional_commits = true
+filter_unconventional = false
+split_commits = false
+protect_breaking_commits = false
+sort_commits = "oldest"
+tag_pattern = "v[0-9]*"
+
+# Keep merge commits out of the changelog, they only repeat what their
+# constituent commits already say.
+filter_commits = false
+topo_order = false
+
+commit_parsers = [
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug fixes" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Refactoring" },
+    { message = "^docs", group = "Documentation" },
+    { message = "^test", group = "Testing" },
+    { message = "^ci", group = "CI" },
+    { message = "^build", group = "Build" },
+    { message = "^chore\\(release\\): prepare for", skip = true },
+    { message = "^chore", group = "Chores" },
+    { message = "^style", group = "Styling" },
+    { message = ".*", group = "Other changes" },
+]

@@ -43,7 +43,8 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    // uiState.first { predicate } suspends until the flow actually produces a matching value, instead of reading .value after a fixed advanceUntilIdle() and hoping enough dispatcher hops happened
+    // uiState.first { predicate } suspends until the flow actually produces a matching value,
+    // instead of reading .value after a fixed advanceUntilIdle() and hoping enough dispatcher hops happened
 
     @Test
     fun `initial uiState has empty instances and isLoading false`() = runTest(testDispatcher) {

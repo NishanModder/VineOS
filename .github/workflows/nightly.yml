@@ -16,8 +16,10 @@ jobs:
     permissions:
       contents: read
       issues: write
+    # Runs in the upstream repo and in forks of it, the previous guard hardcoded upstream's
+    # slug, so the nightly never fired anywhere else
     if: |
-      github.repository == 'Hexadecinull/VineOS' &&
+      (github.repository == 'NishanModder/VineOS' || github.repository == 'Hexadecinull/VineOS') &&
       (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
 
     steps:

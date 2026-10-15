@@ -2,6 +2,8 @@ package com.hexadecinull.vineos.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -81,6 +83,7 @@ fun CreateInstanceScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(rememberScrollState())
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
@@ -170,8 +173,6 @@ fun CreateInstanceScreen(
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-
-            Spacer(Modifier.weight(1f))
 
             Button(
                 onClick = { vm.createInstance() },

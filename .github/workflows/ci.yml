@@ -118,7 +118,9 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # The NDK version is auto-resolved from app/build.gradle.kts ndkVersion via the android-actions/setup-android action
+      # setup-android installs the command-line tools and accepts the SDK licenses; AGP then
+      # auto-downloads the platform, build-tools, CMake 3.22.1 and NDK it needs (app/build.gradle.kts
+      # pins no ndkVersion, so AGP's default NDK for this AGP release is used)
       - name: Set up Android SDK + NDK
         uses: android-actions/setup-android@v4
 

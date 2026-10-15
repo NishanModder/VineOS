@@ -97,8 +97,6 @@ fun ROMDetailScreen(
                 }
             }
 
-            Spacer(Modifier.weight(1f))
-
             val unavailable = uiState.runMode == AbiCompat.RunMode.UNAVAILABLE
             when {
                 unavailable -> Text(
