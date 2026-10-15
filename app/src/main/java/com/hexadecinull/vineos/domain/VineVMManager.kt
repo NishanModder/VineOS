@@ -29,10 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Singleton
-class VineVMManager @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val instanceRepo: InstanceRepository,
-) {
+class VineVMManager @Inject constructor(@ApplicationContext private val context: Context, private val instanceRepo: InstanceRepository) {
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     // Both maps are written from the poll loops on Dispatchers.IO while touch/key/diagnostic calls
