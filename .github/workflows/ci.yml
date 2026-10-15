@@ -47,6 +47,12 @@ jobs:
           path: app/build/reports/ktlint/
           retention-days: 7
 
+      # The reporters above write files, which can only be read by downloading the artifact.
+      # Re-emit them as annotations so each violation shows up inline on the pull request.
+      - name: Annotate ktlint violations
+        if: failure()
+        run: python3 scripts/ktlint_annotations.py || true
+
   # Android lint
   android-lint:
     name: Android lint
